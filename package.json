@@ -14,7 +14,7 @@
   },
   "scripts": {
     "install-scripts": "npm i & npm i -g serve",
-    "start-server": "serve -s build",
+    "start-server": "npm run build && serve -s build",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
