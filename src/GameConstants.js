@@ -1,0 +1,14 @@
+const GAME_ROWS = 8;
+const GAME_COLS = 10;
+
+const UPDATE_STATE = {
+  RUNNING: 0,
+  STOPPED: 1,
+  COLLISION: 2
+}
+
+const BALL_SIZE = 15;
+
+const BIG_BALL_SIZE = 20;
+
+export { GAME_ROWS, GAME_COLS, UPDATE_STATE, BALL_SIZE, BIG_BALL_SIZE }
