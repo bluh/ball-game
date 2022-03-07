@@ -13,7 +13,7 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "install-scripts": "npm i & npm i -g serve",
+    "install-scripts": "npm i && npm i -g serve",
     "start-server": "npm run build && serve -s build",
     "start": "react-scripts start",
     "build": "react-scripts build",
