@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import BallsOverlay from "./BallsOverlay";
-import { GAME_ROWS, GAME_COLS } from "./GameConstants";
+import { GAME_ROWS, GAME_COLS, UPDATE_STATE } from "./GameConstants";
 import "./Game.scss";
 
 function isGameOver(gameState){
@@ -62,20 +62,28 @@ function generateInitialGameState() {
 
 function Game({
   setCallbacks,
-  setGameLevel: setAppLevel
+  setGameLevel: setAppLevel,
+  setGameBalls: setAppBalls
 }) {
   const [gameState, setGameState] = useState(generateInitialGameState);
   const [gameLevel, setGameLevel] = useState(1);
   const [gameOver, setGameOver] = useState(false);
 
-  const restartGame = () => {
-    setGameState(generateInitialGameState());
-    setGameLevel(1);
-    setGameOver(false);
-  }
+  const [ballsRunning, setBallsRunning] = useState(false);
 
-  const makeNewLine = useCallback(() => {
-    if(!gameOver) {
+  const [restartCallback, setRestartCallback] = useState(() => {});
+
+  const restartGame = useCallback(() => {
+    if(window.confirm("Restart game?")){
+      setGameState(generateInitialGameState());
+      setGameLevel(1);
+      setGameOver(false);
+      restartCallback && restartCallback();
+    }
+  }, [restartCallback]);
+
+  const makeNewLine = useCallback((ballsRunning) => {
+    if(!gameOver && !ballsRunning) {
       const newLevel = gameLevel + 1;
       const newState = generateNewState(gameState, newLevel);
 
@@ -94,9 +102,9 @@ function Game({
       ...callbacks,
       restart: restartGame,
       undo: () => console.log('undo'),
-      skip: () => makeNewLine()
+      skip: () => makeNewLine(ballsRunning)
     }))
-  }, [setCallbacks, makeNewLine]);
+  }, [setCallbacks, makeNewLine, restartGame, ballsRunning]);
 
   useEffect(() => setAppLevel && setAppLevel(gameLevel), [setAppLevel, gameLevel]);
 
@@ -111,6 +119,15 @@ function Game({
       }
       return newState;
     });
+  }
+
+  const onBallsChanged = (state) => {
+    if(state === UPDATE_STATE.STOPPED){
+      setBallsRunning(false);
+      makeNewLine(false);
+    }else if(state === UPDATE_STATE.RUNNING){
+      setBallsRunning(true);
+    }
   }
 
   return (
@@ -140,8 +157,10 @@ function Game({
         <BallsOverlay
           gameState={gameState}
           setCallbacks={setCallbacks}
+          setAppBalls={setAppBalls}
+          setRestartCallback={setRestartCallback}
           onBallCollision={ballCollision}
-          onBallFinished={makeNewLine}
+          onBallsChanged={onBallsChanged}
         />
       </div>
       <div

@@ -13,8 +13,10 @@ const GAME_STATES = {
 function BallsOverlay({
   gameState: gameplayState,
   setCallbacks,
+  setAppBalls,
+  setRestartCallback,
   onBallCollision,
-  onBallFinished
+  onBallsChanged
 }) {
   const [gameState, setGameState] = useState(GAME_STATES.READY);
   const [bigBall, setBigBall] = useState(0);
@@ -27,12 +29,33 @@ function BallsOverlay({
   const [initMouse, setInitMouse] = useState(null);
   const [endMouse, setEndMouse] = useState(null);
 
+  const gameField = document.getElementById("game-field");
+
+  // Set callbacks
   useEffect(() => {
-    setCallbacks(callbacks => ({
+    setCallbacks && setCallbacks(callbacks => ({
       ...callbacks,
       fastForward: () => setGameState(state => state === GAME_STATES.PLAYING ? GAME_STATES.FF : state)
     }))
   }, [setCallbacks]);
+
+  // Set restart callback
+  useEffect(() => {
+    gameField && setRestartCallback && setRestartCallback(() => {
+      return () => {
+        setNumBalls(1);
+        setBalls([]);
+        setPendingBigBall(null);
+        setBigBall(gameField.clientWidth / 2);
+        setGameState(GAME_STATES.READY);
+      }
+    })
+  }, [setRestartCallback, gameField]);
+
+  // Create app balls callback
+  useEffect(() => {
+    setAppBalls && setAppBalls(numBalls);
+  }, [setAppBalls, numBalls]);
 
   useEffect(() => {
     if(gameState === GAME_STATES.READY && gameTimer){
@@ -44,6 +67,7 @@ function BallsOverlay({
         setGameTime(gameTime => gameTime + 5);
       }, 10);
       setGameTimer(newTimer);
+      onBallsChanged(UPDATE_STATE.RUNNING);
     }else if(gameState === GAME_STATES.FF && gameTimer){
       clearInterval(gameTimer);
       const newTimer = setInterval(() => {
@@ -52,9 +76,7 @@ function BallsOverlay({
       setGameTimer(newTimer);
       setGameState(GAME_STATES.PLAYING);
     }
-  }, [gameState, gameTimer, numBalls]);
-
-  const gameField = document.getElementById("game-field");
+  }, [gameState, gameTimer, numBalls, onBallsChanged]);
 
   useEffect(() => {
     if(gameField){
@@ -89,9 +111,9 @@ function BallsOverlay({
         setBigBall(pendingBigBall)
         setPendingBigBall(null);
       }
-      onBallFinished();
+      onBallsChanged(UPDATE_STATE.STOPPED);
     }
-  }, [balls, pendingBigBall, gameState, onBallFinished])
+  }, [balls, pendingBigBall, gameState, onBallsChanged])
 
   return (
     <div

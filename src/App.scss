@@ -4,6 +4,14 @@
   
   .header, .footer {
     text-align: center;
+
+    .header-left {
+      float: left;
+    }
+
+    .header-right {
+      float: right;
+    }
   }
 
   .footer > button {

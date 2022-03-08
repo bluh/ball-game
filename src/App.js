@@ -5,14 +5,17 @@ import Game from './Game';
 function App() {
   const [callbacks, setCallbacks] = useState({ fastForward: () => {}, restart: () => {}, undo: () => {}, skip: () => {}});
   const [gameLevel, setGameLevel] = useState(0);
+  const [gameBalls, setGameBalls] = useState(0);
 
   return (
     <div className="container">
       <div className="header">
-        <h1>Balls Game - Level {gameLevel}</h1>
+        <h1>Balls Game</h1>
+        <span className="header-left">Balls - {gameBalls}</span>
+        <span className="header-right">Level - {gameLevel}</span>
       </div>
       <div className="game-container">
-        <Game setCallbacks={setCallbacks} setGameLevel={setGameLevel} />
+        <Game setCallbacks={setCallbacks} setGameLevel={setGameLevel} setGameBalls={setGameBalls} />
       </div>
       <div className="footer">
         <button onClick={callbacks.fastForward}>Fast Forward</button>
