@@ -25,6 +25,7 @@ function BallsOverlay({
   const [gameTimer, setGameTimer] = useState(null);
   const [initDirection, setInitDirection] = useState({x: 1, y: 1});
   const [initMouse, setInitMouse] = useState(null);
+  const [endMouse, setEndMouse] = useState(null);
 
   useEffect(() => {
     setCallbacks(callbacks => ({
@@ -63,7 +64,6 @@ function BallsOverlay({
   }, [gameField]);
 
   const ballCallback = useCallback((evt, index) => {
-    console.log('update', index, evt, balls[index]);
     if(evt.state === UPDATE_STATE.STOPPED && balls[index]){
       if(balls.every(v => v)){
         setPendingBigBall(Math.min(evt.x + BALL_SIZE / 2, gameField.clientWidth - BALL_SIZE));
@@ -83,7 +83,6 @@ function BallsOverlay({
   }, [gameField, balls, onBallCollision, gameplayState])
 
   useEffect(() => {
-    console.log(balls);
     if(balls.length > 0 && balls.every(v => !v) && gameState === GAME_STATES.PLAYING){
       setGameState(GAME_STATES.READY);
       if(pendingBigBall){
@@ -91,7 +90,6 @@ function BallsOverlay({
         setPendingBigBall(null);
       }
       onBallFinished();
-      console.log('finishing');
     }
   }, [balls, pendingBigBall, gameState, onBallFinished])
 
@@ -103,13 +101,17 @@ function BallsOverlay({
           setInitMouse({x: evt.clientX, y: evt.clientY});
         }
       }}
+      onPointerMove={(evt) => {
+        if(gameState === GAME_STATES.READY && evt.isPrimary){
+          setEndMouse({x: evt.clientX, y: evt.clientY})
+        }
+      }}
       onPointerUp={(evt) => {
         if(gameState === GAME_STATES.READY && initMouse && evt.isPrimary){
           const dX = evt.clientX - initMouse.x;
           const dY = -(evt.clientY - initMouse.y);
           const distance = Math.sqrt(dX * dX + dY * dY);
           if(distance >= 10 && dY > 0){
-            console.log('starting', dX, dY);
             setInitDirection({x: dX, y: dY});
             setBalls(Array(numBalls).fill(true));
             setGameState(GAME_STATES.PLAYING);
@@ -118,12 +120,32 @@ function BallsOverlay({
         }
       }}
     >
+      {gameField && initMouse && (
+        <div
+          className="origin"
+          style={{
+            left: initMouse.x - 15/2,
+            top: initMouse.y - 15/2
+          }}
+        />
+      )}
+      {initMouse && endMouse && initMouse.y - endMouse.y > 0 && (
+        <div
+          className="reticle"
+          style={{
+            left: bigBall - 5/2,
+            transform: `rotate(${180 * Math.atan2(endMouse.x - initMouse.x, initMouse.y - endMouse.y) / Math.PI}deg)`
+          }}
+        />
+      )}
       <div
         className="ball big-ball"
         style={{
           left: (pendingBigBall ? pendingBigBall : bigBall) - BIG_BALL_SIZE / 2
         }}
-      />
+      >
+        {numBalls}
+      </div>
       {(gameState === GAME_STATES.PLAYING || gameState === GAME_STATES.FF) && balls.map((v, i) => (
         (<Ball
           key={i}
