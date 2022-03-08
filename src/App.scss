@@ -2,7 +2,7 @@
   display: flex;
   flex-direction: column;
   
-  .header, .footer {
+  .header {
     text-align: center;
 
     .header-left {
@@ -14,12 +14,15 @@
     }
   }
 
-  .footer > button {
-    margin: 16px 4px 0 4px;
-    min-width: 75px;
-    min-height: 30px;
-  }
+  .game-footer {
+    text-align: center;
 
+    & > button {
+      margin: 16px 4px 0 4px;
+      min-width: 75px;
+      min-height: 30px;
+    }
+  }
   .game-container {
     background-color: #ddd;
     min-height: 500px;
@@ -27,5 +30,14 @@
     position: relative;
     flex-direction: column;
     touch-action: none;
+  }
+
+  .footer {
+    position: fixed;
+    bottom: 0px;
+    left: 0px;
+    width: 100%;
+    text-align: center;
+    color: #666;
   }
 }

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import Ball from "./Ball";
-import { UPDATE_STATE, BIG_BALL_SIZE, BALL_SIZE } from "./GameConstants";
+import { UPDATE_STATE, BIG_BALL_SIZE, BALL_SIZE, GAME_TAG } from "./GameConstants";
 
 import "./BallsOverlay.scss";
 
@@ -11,7 +11,8 @@ const GAME_STATES = {
 }
 
 function BallsOverlay({
-  gameState: gameplayState,
+  gameplayState,
+  gameplayLevel,
   setCallbacks,
   setAppBalls,
   setRestartCallback,
@@ -30,6 +31,19 @@ function BallsOverlay({
   const [endMouse, setEndMouse] = useState(null);
 
   const gameField = document.getElementById("game-field");
+  
+  // Load game upon page load
+  useEffect(() => {
+    try{
+      const saveDataJson = window.localStorage.getItem(GAME_TAG);
+      const saveData = JSON.parse(saveDataJson);
+
+      setNumBalls(saveData.balls);
+      setBigBall(saveData.bigBall);
+    }catch{
+      console.error("Could not load save");
+    }
+  }, [])
 
   // Set callbacks
   useEffect(() => {
@@ -57,18 +71,22 @@ function BallsOverlay({
     setAppBalls && setAppBalls(numBalls);
   }, [setAppBalls, numBalls]);
 
+  // Track game state & create gameTime loop
   useEffect(() => {
     if(gameState === GAME_STATES.READY && gameTimer){
+      // gameTimer is running and must be cancelled
       clearInterval(gameTimer);
       setGameTimer(null);
       setGameTime(0);
     }else if(gameState === GAME_STATES.PLAYING && !gameTimer){
+      // Start running gameTimer
       const newTimer = setInterval(() => {
         setGameTime(gameTime => gameTime + 5);
       }, 10);
       setGameTimer(newTimer);
       onBallsChanged(UPDATE_STATE.RUNNING);
     }else if(gameState === GAME_STATES.FF && gameTimer){
+      // Recreate gameTimer to be faster
       clearInterval(gameTimer);
       const newTimer = setInterval(() => {
         setGameTime(gameTime => gameTime + 7);
@@ -78,16 +96,19 @@ function BallsOverlay({
     }
   }, [gameState, gameTimer, numBalls, onBallsChanged]);
 
+  // When the gameField is initialized, move Big Ball to middle of the screen
   useEffect(() => {
-    if(gameField){
+    if(gameField && !bigBall){
       const newPos = gameField.clientWidth / 2;
       setBigBall(newPos);
     }
-  }, [gameField]);
+  }, [gameField, bigBall]);
 
+  // Callback when a Ball has a state update
   const ballCallback = useCallback((evt, index) => {
     if(evt.state === UPDATE_STATE.STOPPED && balls[index]){
       if(balls.every(v => v)){
+        // This is the first ball, so move the Big Ball to its location
         setPendingBigBall(Math.min(evt.x + BALL_SIZE / 2, gameField.clientWidth - BALL_SIZE));
       }
       setBalls(balls => {
@@ -96,6 +117,7 @@ function BallsOverlay({
         return newBalls;
       });
     }else if(evt.state === UPDATE_STATE.COLLISION && balls[index]){
+      // Use powerup, bubble event up to Game
       const gameItem = gameplayState[evt.y][evt.x];
       if(gameItem === -1){
         setNumBalls(balls => balls + 1);
@@ -104,6 +126,7 @@ function BallsOverlay({
     }
   }, [gameField, balls, onBallCollision, gameplayState])
 
+  // Exit PLAYING state when all balls are done
   useEffect(() => {
     if(balls.length > 0 && balls.every(v => !v) && gameState === GAME_STATES.PLAYING){
       setGameState(GAME_STATES.READY);
@@ -114,6 +137,20 @@ function BallsOverlay({
       onBallsChanged(UPDATE_STATE.STOPPED);
     }
   }, [balls, pendingBigBall, gameState, onBallsChanged])
+
+  // Save game after the game state has changed
+  useEffect(() => {
+    const saveData = {
+      level: gameplayLevel,
+      state: gameplayState,
+      balls: numBalls,
+      bigBall: bigBall
+    };
+
+    const saveDataJson = JSON.stringify(saveData);
+
+    window.localStorage.setItem(GAME_TAG, saveDataJson);
+  }, [gameplayLevel, gameplayState, numBalls, bigBall]);
 
   return (
     <div
