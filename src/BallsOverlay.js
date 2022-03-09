@@ -13,6 +13,7 @@ const GAME_STATES = {
 function BallsOverlay({
   gameplayState,
   gameplayLevel,
+  gameOver,
   setCallbacks,
   setAppBalls,
   setRestartCallback,
@@ -140,17 +141,21 @@ function BallsOverlay({
 
   // Save game after the game state has changed
   useEffect(() => {
-    const saveData = {
-      level: gameplayLevel,
-      state: gameplayState,
-      balls: numBalls,
-      bigBall: bigBall
-    };
-
-    const saveDataJson = JSON.stringify(saveData);
-
-    window.localStorage.setItem(GAME_TAG, saveDataJson);
-  }, [gameplayLevel, gameplayState, numBalls, bigBall]);
+    if(gameOver){
+      window.localStorage.removeItem(GAME_TAG);
+    }else{
+      const saveData = {
+        level: gameplayLevel,
+        state: gameplayState,
+        balls: numBalls,
+        bigBall: bigBall
+      };
+  
+      const saveDataJson = JSON.stringify(saveData);
+  
+      window.localStorage.setItem(GAME_TAG, saveDataJson);
+    }
+  }, [gameplayLevel, gameplayState, numBalls, bigBall, gameOver]);
 
   return (
     <div

@@ -183,6 +183,7 @@ function Game({
           (<BallsOverlay
             gameplayState={gameState}
             gameplayLevel={gameLevel}
+            gameOver={gameOver}
             setCallbacks={setCallbacks}
             setAppBalls={getNumBalls}
             setRestartCallback={setRestartCallback}
