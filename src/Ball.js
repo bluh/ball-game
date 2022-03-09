@@ -49,26 +49,18 @@ function Ball({
           x: lastPosition.x + ballDirectionNormal.x * dt,
           y: lastPosition.y + ballDirectionNormal.y * dt
         }
-        const currentBlockX = Math.floor(lastPosition.x * GAME_ROWS / maxWidth);
-        const currentBlockY = GAME_COLS - Math.floor(lastPosition.y * GAME_COLS / maxHeight) - 1;
-
-        let nextBlockX;
-        let nextBlockY;
-
-        if(ballDirectionNormal.x > 0){
-          nextBlockX = Math.floor((newPosition.x + BALL_SIZE) * GAME_ROWS / maxWidth);
-        }else{
-          nextBlockX = Math.floor(newPosition.x * GAME_ROWS / maxWidth);
+        const ballOffset = {
+          x: (ballDirectionNormal.x > 0) * BALL_SIZE,
+          y: (ballDirectionNormal.y > 0) * BALL_SIZE
         }
+        const currentBlockX = Math.floor((lastPosition.x + ballOffset.x) * GAME_ROWS / maxWidth);
+        const currentBlockY = GAME_COLS - Math.floor((lastPosition.y + ballOffset.y) * GAME_COLS / maxHeight) - 1;
 
-        if(ballDirectionNormal.y > 0){
-          nextBlockY = Math.max(0, GAME_COLS - Math.floor((newPosition.y + BALL_SIZE) * GAME_COLS / maxHeight) - 1);
-        }else{
-          nextBlockY = GAME_COLS - Math.floor(newPosition.y * GAME_COLS / maxHeight) - 1;
-        }
+        const nextBlockX = Math.floor((newPosition.x + ballOffset.x) * GAME_ROWS / maxWidth);
+        const nextBlockY = Math.max(0, GAME_COLS - Math.floor((newPosition.y + ballOffset.y) * GAME_COLS / maxHeight) - 1);
 
-        if(currentBlockX !== nextBlockX || currentBlockY !== nextBlockY){
-          // console.log(currentBlockX, currentBlockY, 'moving to', nextBlockX, nextBlockY);
+        if((currentBlockX !== nextBlockX || currentBlockY !== nextBlockY) && nextBlockX >= 0 && nextBlockX < GAME_ROWS && nextBlockY >= 0){
+          console.log(currentBlockX, currentBlockY, 'moving to', nextBlockX, nextBlockY);
           if(gameState[nextBlockY] && gameState[nextBlockY][nextBlockX] !== 0){
             // console.log('collision with', gameState[nextBlockY][nextBlockX], 'at', nextBlockX, nextBlockY);
             // horizontal or vertical hit

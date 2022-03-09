@@ -4,15 +4,15 @@ import { UPDATE_STATE, BIG_BALL_SIZE, BALL_SIZE, GAME_TAG } from "./GameConstant
 
 import "./BallsOverlay.scss";
 
-const GAME_STATES = {
+const BALLS_STATES = {
   READY: 0,
   PLAYING: 1,
   FF: 2
 }
 
 function BallsOverlay({
-  gameplayState,
-  gameplayLevel,
+  gameState,
+  gameLevel,
   gameOver,
   setCallbacks,
   setAppBalls,
@@ -20,10 +20,10 @@ function BallsOverlay({
   onBallCollision,
   onBallsChanged
 }) {
-  const [gameState, setGameState] = useState(GAME_STATES.READY);
+  const [ballsState, setBallsState] = useState(BALLS_STATES.READY);
   const [bigBall, setBigBall] = useState(0);
   const [pendingBigBall, setPendingBigBall] = useState(null);
-  const [numBalls, setNumBalls] = useState(1);
+  const [numBalls, setNumBalls] = useState(100);
   const [balls, setBalls] = useState([]);
   const [gameTime, setGameTime] = useState(0);
   const [gameTimer, setGameTimer] = useState(null);
@@ -39,8 +39,10 @@ function BallsOverlay({
       const saveDataJson = window.localStorage.getItem(GAME_TAG);
       const saveData = JSON.parse(saveDataJson);
 
-      setNumBalls(saveData.balls);
-      setBigBall(saveData.bigBall);
+      if(saveData.balls && saveData.bigBall){
+        setNumBalls(saveData.balls);
+        setBigBall(saveData.bigBall);
+      }
     }catch{
       console.error("Could not load save");
     }
@@ -50,7 +52,7 @@ function BallsOverlay({
   useEffect(() => {
     setCallbacks && setCallbacks(callbacks => ({
       ...callbacks,
-      fastForward: () => setGameState(state => state === GAME_STATES.PLAYING ? GAME_STATES.FF : state)
+      fastForward: () => setBallsState(state => state === BALLS_STATES.PLAYING ? BALLS_STATES.FF : state)
     }))
   }, [setCallbacks]);
 
@@ -62,7 +64,7 @@ function BallsOverlay({
         setBalls([]);
         setPendingBigBall(null);
         setBigBall(gameField.clientWidth / 2);
-        setGameState(GAME_STATES.READY);
+        setBallsState(BALLS_STATES.READY);
       }
     })
   }, [setRestartCallback, gameField]);
@@ -74,28 +76,28 @@ function BallsOverlay({
 
   // Track game state & create gameTime loop
   useEffect(() => {
-    if(gameState === GAME_STATES.READY && gameTimer){
+    if(ballsState === BALLS_STATES.READY && gameTimer){
       // gameTimer is running and must be cancelled
       clearInterval(gameTimer);
       setGameTimer(null);
       setGameTime(0);
-    }else if(gameState === GAME_STATES.PLAYING && !gameTimer){
+    }else if(ballsState === BALLS_STATES.PLAYING && !gameTimer){
       // Start running gameTimer
       const newTimer = setInterval(() => {
         setGameTime(gameTime => gameTime + 5);
       }, 10);
       setGameTimer(newTimer);
       onBallsChanged(UPDATE_STATE.RUNNING);
-    }else if(gameState === GAME_STATES.FF && gameTimer){
+    }else if(ballsState === BALLS_STATES.FF && gameTimer){
       // Recreate gameTimer to be faster
       clearInterval(gameTimer);
       const newTimer = setInterval(() => {
         setGameTime(gameTime => gameTime + 7);
       }, 2);
       setGameTimer(newTimer);
-      setGameState(GAME_STATES.PLAYING);
+      setBallsState(BALLS_STATES.PLAYING);
     }
-  }, [gameState, gameTimer, numBalls, onBallsChanged]);
+  }, [ballsState, gameTimer, numBalls, onBallsChanged]);
 
   // When the gameField is initialized, move Big Ball to middle of the screen
   useEffect(() => {
@@ -119,25 +121,25 @@ function BallsOverlay({
       });
     }else if(evt.state === UPDATE_STATE.COLLISION && balls[index]){
       // Use powerup, bubble event up to Game
-      const gameItem = gameplayState[evt.y][evt.x];
+      const gameItem = gameState[evt.y][evt.x];
       if(gameItem === -1){
         setNumBalls(balls => balls + 1);
       }
       onBallCollision(evt.x, evt.y);
     }
-  }, [gameField, balls, onBallCollision, gameplayState])
+  }, [gameField, balls, onBallCollision, gameState])
 
   // Exit PLAYING state when all balls are done
   useEffect(() => {
-    if(balls.length > 0 && balls.every(v => !v) && gameState === GAME_STATES.PLAYING){
-      setGameState(GAME_STATES.READY);
+    if(balls.length > 0 && balls.every(v => !v) && ballsState === BALLS_STATES.PLAYING){
+      setBallsState(BALLS_STATES.READY);
       if(pendingBigBall){
         setBigBall(pendingBigBall)
         setPendingBigBall(null);
       }
       onBallsChanged(UPDATE_STATE.STOPPED);
     }
-  }, [balls, pendingBigBall, gameState, onBallsChanged])
+  }, [balls, pendingBigBall, ballsState, onBallsChanged])
 
   // Save game after the game state has changed
   useEffect(() => {
@@ -145,8 +147,8 @@ function BallsOverlay({
       window.localStorage.removeItem(GAME_TAG);
     }else{
       const saveData = {
-        level: gameplayLevel,
-        state: gameplayState,
+        level: gameLevel,
+        state: gameState,
         balls: numBalls,
         bigBall: bigBall
       };
@@ -155,30 +157,30 @@ function BallsOverlay({
   
       window.localStorage.setItem(GAME_TAG, saveDataJson);
     }
-  }, [gameplayLevel, gameplayState, numBalls, bigBall, gameOver]);
+  }, [gameLevel, gameState, numBalls, bigBall, gameOver]);
 
   return (
     <div
       id="game-field"
       onPointerDown={(evt) => {
-        if(gameState === GAME_STATES.READY && evt.isPrimary){
+        if(ballsState === BALLS_STATES.READY && evt.isPrimary){
           setInitMouse({x: evt.clientX, y: evt.clientY});
         }
       }}
       onPointerMove={(evt) => {
-        if(gameState === GAME_STATES.READY && evt.isPrimary){
+        if(ballsState === BALLS_STATES.READY && evt.isPrimary){
           setEndMouse({x: evt.clientX, y: evt.clientY})
         }
       }}
       onPointerUp={(evt) => {
-        if(gameState === GAME_STATES.READY && initMouse && evt.isPrimary){
+        if(ballsState === BALLS_STATES.READY && initMouse && evt.isPrimary){
           const dX = evt.clientX - initMouse.x;
           const dY = -(evt.clientY - initMouse.y);
           const distance = Math.sqrt(dX * dX + dY * dY);
           if(distance >= 10 && dY > 0){
             setInitDirection({x: dX, y: dY});
             setBalls(Array(numBalls).fill(true));
-            setGameState(GAME_STATES.PLAYING);
+            setBallsState(BALLS_STATES.PLAYING);
           }
           setInitMouse(null);
         }
@@ -210,16 +212,16 @@ function BallsOverlay({
       >
         {numBalls}
       </div>
-      {(gameState === GAME_STATES.PLAYING || gameState === GAME_STATES.FF) && balls.map((v, i) => (
+      {(ballsState === BALLS_STATES.PLAYING || ballsState === BALLS_STATES.FF) && balls.map((v, i) => (
         (<Ball
           key={i}
-          gameState={gameplayState}
+          gameState={gameState}
           initialX={bigBall - BIG_BALL_SIZE / 2}
           initialDX={initDirection.x}
           initialDY={initDirection.y}
           maxWidth={gameField && gameField.clientWidth}
           maxHeight={gameField && gameField.clientHeight}
-          gameTime={(gameState === GAME_STATES.PLAYING || gameState === GAME_STATES.FF) && gameTime > (i * 50) ? gameTime : 0}
+          gameTime={(ballsState === BALLS_STATES.PLAYING || ballsState === BALLS_STATES.FF) && gameTime > (i * 50) ? gameTime : 0}
           updateCallback={(evt) => ballCallback(evt, i)}
         />)
       ))}

@@ -80,8 +80,10 @@ function Game({
       const saveDataJson = window.localStorage.getItem(GAME_TAG);
       const saveData = JSON.parse(saveDataJson);
 
-      setGameLevel(saveData.level);
-      setGameState(saveData.state);
+      if(saveData.level && saveData.state){
+        setGameLevel(saveData.level);
+        setGameState(saveData.state);
+      }
     }catch{
       console.error("Could not load save");
     }
@@ -181,8 +183,8 @@ function Game({
       <div className="game-overlay">
         {gameLoaded ? 
           (<BallsOverlay
-            gameplayState={gameState}
-            gameplayLevel={gameLevel}
+            gameState={gameState}
+            gameLevel={gameLevel}
             gameOver={gameOver}
             setCallbacks={setCallbacks}
             setAppBalls={getNumBalls}
