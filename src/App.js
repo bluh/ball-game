@@ -3,7 +3,7 @@ import './App.scss';
 import Game from './Game';
 
 function App() {
-  const [callbacks, setCallbacks] = useState({ fastForward: () => {}, restart: () => {}, undo: () => {}, skip: () => {}});
+  const [callbacks, setCallbacks] = useState({ fastForward: () => {}, restart: () => {}, undo: () => {}, skipGame: () => {}, skipBalls: () => {}});
   const [gameLevel, setGameLevel] = useState(0);
   const [gameBalls, setGameBalls] = useState(0);
 
@@ -21,7 +21,7 @@ function App() {
         <button onClick={callbacks.fastForward}>Fast Forward</button>
         <button onClick={callbacks.restart}>Restart</button>
         <button onClick={callbacks.undo}>Undo</button>
-        <button onClick={callbacks.skip}>Skip</button>
+        <button onClick={() => callbacks.skipGame() || callbacks.skipBalls()}>Skip</button>
       </div>
       <div className="footer">
         v0.3 | <a href="https://github.com/bluh/ball-game" target="_blank" rel="noreferrer">View on Github</a>

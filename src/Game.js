@@ -101,8 +101,8 @@ function Game({
   }, [restartCallback]);
 
   // Callback to add a new line to the game state
-  const makeNewLine = useCallback((ballsRunning) => {
-    if(!gameOver && !ballsRunning) {
+  const makeNewLine = useCallback(() => {
+    if(!gameOver) {
       const newLevel = gameLevel + 1;
       const newState = generateNewState(gameState, newLevel);
 
@@ -121,7 +121,7 @@ function Game({
       ...callbacks,
       restart: restartGame,
       undo: () => console.log('undo'),
-      skip: () => makeNewLine(ballsRunning)
+      skipGame: () => !ballsRunning && makeNewLine()
     }))
   }, [setCallbacks, makeNewLine, restartGame, ballsRunning]);
 
@@ -151,7 +151,7 @@ function Game({
   const onBallsChanged = (state) => {
     if(state === UPDATE_STATE.STOPPED){
       setBallsRunning(false);
-      makeNewLine(false);
+      makeNewLine();
     }else if(state === UPDATE_STATE.RUNNING){
       setBallsRunning(true);
     }

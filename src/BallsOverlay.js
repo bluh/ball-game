@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Ball from "./Ball";
 import { UPDATE_STATE, BIG_BALL_SIZE, BALL_SIZE, GAME_TAG } from "./GameConstants";
 
@@ -7,7 +7,8 @@ import "./BallsOverlay.scss";
 const BALLS_STATES = {
   READY: 0,
   PLAYING: 1,
-  FF: 2
+  FF: 2,
+  SKIP: 3
 }
 
 function BallsOverlay({
@@ -31,6 +32,8 @@ function BallsOverlay({
   const [initMouse, setInitMouse] = useState(null);
   const [endMouse, setEndMouse] = useState(null);
 
+  const finishedBalls = useRef(0);
+
   const gameField = document.getElementById("game-field");
   
   // Load game upon page load
@@ -52,7 +55,8 @@ function BallsOverlay({
   useEffect(() => {
     setCallbacks && setCallbacks(callbacks => ({
       ...callbacks,
-      fastForward: () => setBallsState(state => state === BALLS_STATES.PLAYING ? BALLS_STATES.FF : state)
+      fastForward: () => setBallsState(state => state === BALLS_STATES.PLAYING ? BALLS_STATES.FF : state),
+      skipBalls: () => setBallsState(state => state === BALLS_STATES.PLAYING ? BALLS_STATES.SKIP : state),
     }))
   }, [setCallbacks]);
 
@@ -110,7 +114,8 @@ function BallsOverlay({
   // Callback when a Ball has a state update
   const ballCallback = useCallback((evt, index) => {
     if(evt.state === UPDATE_STATE.STOPPED && balls[index]){
-      if(balls.every(v => v)){
+      finishedBalls.current = finishedBalls.current + 1;
+      if(finishedBalls.current === 1){
         // This is the first ball, so move the Big Ball to its location
         setPendingBigBall(Math.min(evt.x + BALL_SIZE / 2, gameField.clientWidth - BALL_SIZE));
       }
@@ -131,7 +136,7 @@ function BallsOverlay({
 
   // Exit PLAYING state when all balls are done
   useEffect(() => {
-    if(balls.length > 0 && balls.every(v => !v) && ballsState === BALLS_STATES.PLAYING){
+    if((finishedBalls.current === balls.length && ballsState === BALLS_STATES.PLAYING) || ballsState === BALLS_STATES.SKIP){
       setBallsState(BALLS_STATES.READY);
       if(pendingBigBall){
         setBigBall(pendingBigBall)
@@ -139,7 +144,7 @@ function BallsOverlay({
       }
       onBallsChanged(UPDATE_STATE.STOPPED);
     }
-  }, [balls, pendingBigBall, ballsState, onBallsChanged])
+  }, [finishedBalls, balls.length, pendingBigBall, ballsState, onBallsChanged])
 
   // Save game after the game state has changed
   useEffect(() => {
@@ -181,6 +186,7 @@ function BallsOverlay({
             setInitDirection({x: dX, y: dY});
             setBalls(Array(numBalls).fill(true));
             setBallsState(BALLS_STATES.PLAYING);
+            finishedBalls.current = 0;
           }
           setInitMouse(null);
         }

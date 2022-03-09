@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { BALL_SIZE, GAME_COLS, GAME_ROWS, UPDATE_STATE } from "./GameConstants";
 
 const BALL_WIDTH = BALL_SIZE;
@@ -15,8 +15,9 @@ function Ball({
 }) {
   const [ballPosition, setBallPosition] = useState({x: 1, y: 1});
   const [ballDirection, setBallDirection] = useState({x: 1, y: 1})
-  const [lastGameTime, setLastGameTime] = useState(null);
   const [isMoving, setIsMoving] = useState(true);
+
+  const lastGameTime = useRef(0);
 
   useEffect(() => {
     setBallPosition({
@@ -41,8 +42,8 @@ function Ball({
   }, [ballDirection]);
 
   useEffect(() => {
-    if(lastGameTime){
-      const dt = gameTime - lastGameTime;
+    if(lastGameTime.current){
+      const dt = gameTime - lastGameTime.current;
       if(dt > 0 && isMoving){
         const lastPosition = ballPosition;
         const newPosition = {
@@ -60,7 +61,7 @@ function Ball({
         const nextBlockY = Math.max(0, GAME_COLS - Math.floor((newPosition.y + ballOffset.y) * GAME_COLS / maxHeight) - 1);
 
         if((currentBlockX !== nextBlockX || currentBlockY !== nextBlockY) && nextBlockX >= 0 && nextBlockX < GAME_ROWS && nextBlockY >= 0){
-          console.log(currentBlockX, currentBlockY, 'moving to', nextBlockX, nextBlockY);
+          // console.log(currentBlockX, currentBlockY, 'moving to', nextBlockX, nextBlockY);
           if(gameState[nextBlockY] && gameState[nextBlockY][nextBlockX] !== 0){
             // console.log('collision with', gameState[nextBlockY][nextBlockX], 'at', nextBlockX, nextBlockY);
             // horizontal or vertical hit
@@ -106,13 +107,11 @@ function Ball({
             updateCallback({state: UPDATE_STATE.COLLISION, x: nextBlockX, y: nextBlockY});
           }
         }
-        setLastGameTime(gameTime);
         setBallPosition(newPosition);
       }
-    }else{
-      setLastGameTime(gameTime);
     }
-  }, [gameTime, lastGameTime, ballDirectionNormal, isMoving, maxHeight, maxWidth, gameState, updateCallback]);
+    lastGameTime.current = gameTime;
+  }, [gameTime]);
 
   useEffect(() => {
     if(ballPosition.x >= maxWidth - BALL_WIDTH || ballPosition.x <= 0){
