@@ -6,7 +6,7 @@ import "./Game.scss";
 function isGameOver(gameState){
   const lastLevel = gameState[gameState.length - 2];
 
-  return lastLevel !== null && lastLevel.some(c => c !== 0);
+  return lastLevel !== null && lastLevel.some(c => c > 0);
 }
 
 function generateNewLine(gameLevel){
