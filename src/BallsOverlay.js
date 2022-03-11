@@ -144,7 +144,7 @@ function BallsOverlay({
       }
       onBallsChanged(UPDATE_STATE.STOPPED);
     }
-  }, [finishedBalls, balls.length, pendingBigBall, ballsState, onBallsChanged])
+  }, [finishedBalls, balls, pendingBigBall, ballsState, onBallsChanged])
 
   // Save game after the game state has changed
   useEffect(() => {
