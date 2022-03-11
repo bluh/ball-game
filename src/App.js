@@ -24,7 +24,7 @@ function App() {
         <button onClick={() => callbacks.skipGame() || callbacks.skipBalls()}>Skip</button>
       </div>
       <div className="footer">
-        v0.3 | <a href="https://github.com/bluh/ball-game" target="_blank" rel="noreferrer">View on Github</a>
+        v0.3.2 | <a href="https://github.com/bluh/ball-game" target="_blank" rel="noreferrer">View on Github</a>
       </div>
     </div>
   );
