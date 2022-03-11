@@ -24,7 +24,7 @@ function BallsOverlay({
   const [ballsState, setBallsState] = useState(BALLS_STATES.READY);
   const [bigBall, setBigBall] = useState(0);
   const [pendingBigBall, setPendingBigBall] = useState(null);
-  const [numBalls, setNumBalls] = useState(100);
+  const [numBalls, setNumBalls] = useState(1);
   const [balls, setBalls] = useState([]);
   const [gameTime, setGameTime] = useState(0);
   const [gameTimer, setGameTimer] = useState(null);
